@@ -38,47 +38,82 @@ driver= start_driver()
 driver.get('https://pncp.gov.br/app/editais?q=&status=recebendo_proposta&pagina=1')
 
 #Pesquisando
-wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys('Dipirona sódica')
-driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
-driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
-
-#Abrindo Edital
-driver.execute_script("document.body.style.zoom='50%'")  
-wait_for_element(driver, By.XPATH, '//a[@title = "Acessar item."]').click()
-
-#No edital
-wait_for_element(driver, By.XPATH, '//div[@class= "ng-star-inserted"]')
-sleep(1)
-
-contador = 1
-while True:
-    try:
-        btn_detail = driver.execute_script(f'''
-    return document.evaluate(
-        '(//button[@class="br-button circle ng-star-inserted"])[{contador}]', 
-        document, 
-        null, 
-        XPathResult.FIRST_ORDERED_NODE_TYPE, 
-        null
-    ).singleNodeValue;
-''')
-        driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_detail)
-        btn_detail.click()
+keywords = ['Dipirona sódica', 'Atenolol', 'Clonazepam']
+for keyword in keywords:
         
-        #Para varrer
-        wait_for_element(driver, By.XPATH, '//div[@class= "br-modal modal-item-contrato"]')
-        sleep(0.2)
-        #Varrendo os dados
-        sleep(2)
-        driver.find_element(By.XPATH, '//button[@class= "br-button primary small m-2"]').click()
-        contador += 1
-    except Exception as e:
-        print(e)
-        contador = 1
-        btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
-        is_disabled = btn_next_page.get_attribute('disabled') is not None
-        
-        if is_disabled:
+    wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keyword}')
+    driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
+    driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
+
+    #Abrindo Edital 
+    n_edital = 0
+    contador_itens = 1
+    while True:
+        if contador_itens >= 10:
+            btn_main = driver.execute_script(f'''
+                return document.evaluate(
+                    '//a[@title= "Editais"]', 
+                    document, 
+                    null, 
+                    XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                    null
+                ).singleNodeValue;
+            ''')
+            driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_main)
+            btn_main.click()
+            n_edital = 0
             break
-        else:
-            btn_next_page.click()
+        
+        btn_edital = driver.execute_script(f'''
+        return document.evaluate(
+            '(//a[@title = "Acessar item."])[{n_edital + 1}]', 
+            document, 
+            null, 
+            XPathResult.FIRST_ORDERED_NODE_TYPE, 
+            null
+        ).singleNodeValue;
+    ''')
+        driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_edital)
+        sleep(1)
+        btn_edital.click()
+
+        #No edital
+        wait_for_element(driver, By.XPATH, '//div[@class= "ng-star-inserted"]')
+        sleep(1)
+
+        contador = 1
+        while True:
+            try:
+                btn_detail = driver.execute_script(f'''
+            return document.evaluate(
+                '(//button[@class="br-button circle ng-star-inserted"])[{contador}]', 
+                document, 
+                null, 
+                XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                null
+            ).singleNodeValue;
+        ''')
+                driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_detail)
+                sleep(1)
+                btn_detail.click()
+                
+                #Para varrer
+                wait_for_element(driver, By.XPATH, '//div[@class= "br-modal modal-item-contrato"]')
+                sleep(0.2)
+                #Varrendo os dados
+                sleep(2)
+                driver.find_element(By.XPATH, '//button[@class= "br-button primary small m-2"]').click()
+                contador += 1
+                contador_itens += 1
+            except Exception as e:
+                print(e)
+                contador = 1
+                btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
+                is_disabled = btn_next_page.get_attribute('disabled') is not None
+                
+                if is_disabled and contador_itens >= 10:
+                    break
+                elif contador_itens >= 10:
+                    break
+                elif contador_itens < 10:
+                    btn_next_page.click()

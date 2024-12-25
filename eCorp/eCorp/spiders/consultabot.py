@@ -46,69 +46,108 @@ class ConsultasPNCPsSpider(scrapy.Spider):
         
         driver= start_driver()
         driver.get(response.meta['next_url'])
-
+        
         #Pesquisando
-        wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys('Dipirona sódica')
-        driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
-        driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
+        keywords = ['Dipirona sódica', 'Atenolol', 'Clonazepam']
+        
+        for keyword in keywords:
+            wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keyword}')
+            driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
+            driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
+            sleep(1)
 
-        #Abrindo Edital
-        driver.execute_script("document.body.style.zoom='50%'")  
-        wait_for_element(driver, By.XPATH, '//a[@title = "Acessar item."]').click()
-
-        #No edital
-        wait_for_element(driver, By.XPATH, '//div[@class= "ng-star-inserted"]')
-        sleep(1)
-
-        contador = 1
-        while True:
-            try:
-                #Fazendo um scroll até o botão, sem precisar de zoom ou um scroll fixo
-                btn_detail = driver.execute_script(f'''
-    return document.evaluate(
-        '(//button[@class="br-button circle ng-star-inserted"])[{contador}]', 
-        document, 
-        null, 
-        XPathResult.FIRST_ORDERED_NODE_TYPE, 
-        null
-    ).singleNodeValue;
-''')
-                driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_detail)
-                sleep(1)
-                btn_detail.click()
-                
-                #Para varrer
-                wait_for_element(driver, By.XPATH, '//div[@class= "br-modal modal-item-contrato"]')
-                sleep(0.2)
-                #Varrendo os dados
-                response_webdriver = Selector(text= driver.page_source)
-                for element in response_webdriver.xpath('//div[@class= "br-modal-body"]'):
-                    yield{
-                        'n_item': element.xpath('(//div[@class= "br-modal-body"]/div)[1]/text()').get(),
-                        'descricao': element.xpath('(//div[@class= "br-modal-body"]/div)[2]//span/text()').get(),
-                        'criterio_de_julgamento': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[1]//span/text()').get(),
-                        'situacao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[2]//span/text()').get(),
-                        'tipo': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[3]//span/text()').get(),
-                        'categoria_do_itme_de_leilao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[4]//span/text()').get(),
-                        'incentivo_basico': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[1]//span/text()').get(),
-                        'beneficio': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[2]//span/text()').get(),
-                        'margem_de_preferencia_normal': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[3]//span/text()').get(),
-                        'margem_de_preferencia_adicional': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[4]//span/text()').get(),
-                        'quantidade': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[1]//span/text()').get(),
-                        'unidade_de_medida': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[2]//span/text()').get(),
-                        'valor_unitario_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[3]//span/text()').get(),
-                        'valor_total_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[4]//span/text()').get(),
-                    }
-                    
-                driver.find_element(By.XPATH, '//button[@class= "br-button primary small m-2"]').click()
-                contador += 1
-            except:
-                contador = 1
-                btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
-                is_disabled = btn_next_page.get_attribute('disabled') is not None
-                
-                if is_disabled:
+            #Abrindo Edital
+            n_edital = 0
+            contador_itens = 1
+            while True:
+                if contador_itens >= 50:
+                    btn_main = driver.execute_script(f'''
+                        return document.evaluate(
+                            '//a[@title= "Editais"]', 
+                            document, 
+                            null, 
+                            XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                            null
+                        ).singleNodeValue;
+                    ''')
+                    driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_main)
+                    sleep(0.5)
+                    btn_main.click()
+                    n_edital = 0
                     break
-                else:
-                    btn_next_page.click()
-                    sleep(1)
+                
+                btn_edital = driver.execute_script(f'''
+                return document.evaluate(
+                    '(//a[@title = "Acessar item."])[{n_edital + 1}]', 
+                    document, 
+                    null, 
+                    XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                    null
+                    ).singleNodeValue;
+                ''')         
+                driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_edital)
+                sleep(0.5)
+                btn_edital.click()
+
+                #No edital
+                wait_for_element(driver, By.XPATH, '//div[@class= "ng-star-inserted"]')
+                sleep(1)
+
+                contador = 1
+                contador_itens= 1
+                while True:
+                    try:
+                        #Fazendo um scroll até o botão, sem precisar de zoom ou um scroll fixo
+                        btn_detail = driver.execute_script(f'''
+                            return document.evaluate(
+                                '(//button[@class="br-button circle ng-star-inserted"])[{contador}]', 
+                                document, 
+                                null, 
+                                XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                                null
+                                ).singleNodeValue;
+                            ''')
+                        driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_detail)
+                        sleep(0.5)
+                        btn_detail.click()
+                        
+                        #Para varrer
+                        wait_for_element(driver, By.XPATH, '//div[@class= "br-modal modal-item-contrato"]')
+                        sleep(0.2)
+                        #Varrendo os dados
+                        response_webdriver = Selector(text= driver.page_source)
+                        for element in response_webdriver.xpath('//div[@class= "br-modal-body"]'):
+                            yield{
+                                'n_item': element.xpath('(//div[@class= "br-modal-body"]/div)[1]/text()').get(),
+                                'descricao': element.xpath('(//div[@class= "br-modal-body"]/div)[2]//span/text()').get(),
+                                'criterio_de_julgamento': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[1]//span/text()').get(),
+                                'situacao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[2]//span/text()').get(),
+                                'tipo': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[3]//span/text()').get(),
+                                'categoria_do_itme_de_leilao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[4]//span/text()').get(),
+                                'incentivo_basico': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[1]//span/text()').get(),
+                                'beneficio': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[2]//span/text()').get(),
+                                'margem_de_preferencia_normal': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[3]//span/text()').get(),
+                                'margem_de_preferencia_adicional': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[4]//span/text()').get(),
+                                'quantidade': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[1]//span/text()').get(),
+                                'unidade_de_medida': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[2]//span/text()').get(),
+                                'valor_unitario_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[3]//span/text()').get(),
+                                'valor_total_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[4]//span/text()').get(),
+                            }
+                            
+                        driver.find_element(By.XPATH, '//button[@class= "br-button primary small m-2"]').click()
+                        contador += 1
+                        contador_itens += 1
+                    except Exception as e:
+                        print(e)
+                        contador = 1
+                        btn_next_page = wait_for_element(driver, By.XPATH, '//button[@id= "btn-next-page"]')
+                        is_disabled = btn_next_page.get_attribute('disabled') is not None
+                        
+                        if is_disabled:
+                            break
+                        
+                        elif contador_itens >= 50:
+                            break
+                        elif contador_itens < 50:
+                            btn_next_page.click()
+                            sleep(1)
