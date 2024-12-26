@@ -54,25 +54,16 @@ class ConsultasPNCPsSpider(scrapy.Spider):
             wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keyword}')
             driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
             driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
-            sleep(1)
+            sleep(2)
 
             #Abrindo Edital
             n_edital = 0
             contador_itens = 1
             while True:
-                if contador_itens >= 50:
-                    btn_main = driver.execute_script(f'''
-                        return document.evaluate(
-                            '//a[@title= "Editais"]', 
-                            document, 
-                            null, 
-                            XPathResult.FIRST_ORDERED_NODE_TYPE, 
-                            null
-                        ).singleNodeValue;
-                    ''')
-                    driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_main)
+                if contador_itens >= 500:
+                    driver.execute_script("window.scrollTo(0, document.body.scrollTop)")
                     sleep(0.5)
-                    btn_main.click()
+                    driver.find_element(By.XPATH, '//a[@title= "Editais"]').click()
                     n_edital = 0
                     break
                 
@@ -98,45 +89,48 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                 while True:
                     try:
                         #Fazendo um scroll até o botão, sem precisar de zoom ou um scroll fixo
-                        btn_detail = driver.execute_script(f'''
-                            return document.evaluate(
-                                '(//button[@class="br-button circle ng-star-inserted"])[{contador}]', 
-                                document, 
-                                null, 
-                                XPathResult.FIRST_ORDERED_NODE_TYPE, 
-                                null
-                                ).singleNodeValue;
-                            ''')
-                        driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_detail)
-                        sleep(0.5)
-                        btn_detail.click()
-                        
-                        #Para varrer
-                        wait_for_element(driver, By.XPATH, '//div[@class= "br-modal modal-item-contrato"]')
-                        sleep(0.2)
-                        #Varrendo os dados
-                        response_webdriver = Selector(text= driver.page_source)
-                        for element in response_webdriver.xpath('//div[@class= "br-modal-body"]'):
-                            yield{
-                                'n_item': element.xpath('(//div[@class= "br-modal-body"]/div)[1]/text()').get(),
-                                'descricao': element.xpath('(//div[@class= "br-modal-body"]/div)[2]//span/text()').get(),
-                                'criterio_de_julgamento': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[1]//span/text()').get(),
-                                'situacao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[2]//span/text()').get(),
-                                'tipo': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[3]//span/text()').get(),
-                                'categoria_do_itme_de_leilao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[4]//span/text()').get(),
-                                'incentivo_basico': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[1]//span/text()').get(),
-                                'beneficio': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[2]//span/text()').get(),
-                                'margem_de_preferencia_normal': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[3]//span/text()').get(),
-                                'margem_de_preferencia_adicional': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[4]//span/text()').get(),
-                                'quantidade': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[1]//span/text()').get(),
-                                'unidade_de_medida': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[2]//span/text()').get(),
-                                'valor_unitario_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[3]//span/text()').get(),
-                                'valor_total_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[4]//span/text()').get(),
-                            }
+                        if contador_itens >= 500:
+                            btn_detail = driver.execute_script(f'''
+                                return document.evaluate(
+                                    '(//button[@class="br-button circle ng-star-inserted"])[{contador}]', 
+                                    document, 
+                                    null, 
+                                    XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                                    null
+                                    ).singleNodeValue;
+                                ''')
+                            driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_detail)
+                            sleep(0.5)
+                            btn_detail.click()
                             
-                        driver.find_element(By.XPATH, '//button[@class= "br-button primary small m-2"]').click()
-                        contador += 1
-                        contador_itens += 1
+                            #Para varrer
+                            wait_for_element(driver, By.XPATH, '//div[@class= "br-modal modal-item-contrato"]')
+                            sleep(0.2)
+                            #Varrendo os dados
+                            response_webdriver = Selector(text= driver.page_source)
+                            for element in response_webdriver.xpath('//div[@class= "br-modal-body"]'):
+                                yield{
+                                    'n_item': element.xpath('(//div[@class= "br-modal-body"]/div)[1]/text()').get(),
+                                    'descricao': element.xpath('(//div[@class= "br-modal-body"]/div)[2]//span/text()').get(),
+                                    'criterio_de_julgamento': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[1]//span/text()').get(),
+                                    'situacao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[2]//span/text()').get(),
+                                    'tipo': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[3]//span/text()').get(),
+                                    'categoria_do_itme_de_leilao': element.xpath('((//div[@class= "br-modal-body"]/div)[3]/div)[4]//span/text()').get(),
+                                    'incentivo_basico': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[1]//span/text()').get(),
+                                    'beneficio': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[2]//span/text()').get(),
+                                    'margem_de_preferencia_normal': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[3]//span/text()').get(),
+                                    'margem_de_preferencia_adicional': element.xpath('((//div[@class= "br-modal-body"]/div)[4]/div)[4]//span/text()').get(),
+                                    'quantidade': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[1]//span/text()').get(),
+                                    'unidade_de_medida': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[2]//span/text()').get(),
+                                    'valor_unitario_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[3]//span/text()').get(),
+                                    'valor_total_estimado': element.xpath('((//div[@class= "br-modal-body"]/div)[5]/div)[4]//span/text()').get(),
+                                }
+                                
+                            driver.find_element(By.XPATH, '//button[@class= "br-button primary small m-2"]').click()
+                            contador += 1
+                            contador_itens += 1
+                        else: 
+                            break
                     except Exception as e:
                         print(e)
                         contador = 1
@@ -146,8 +140,6 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                         if is_disabled:
                             break
                         
-                        elif contador_itens >= 50:
-                            break
-                        elif contador_itens < 50:
+                        elif contador_itens < 500:
                             btn_next_page.click()
                             sleep(1)
