@@ -62,7 +62,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
             while True:
                 if contador_itens >= 500:
                     driver.execute_script("window.scrollTo(0, document.body.scrollTop)")
-                    sleep(0.5)
+                    sleep(0.8)
                     driver.find_element(By.XPATH, '//a[@title= "Editais"]').click()
                     n_edital = 0
                     break
@@ -84,15 +84,16 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                 wait_for_element(driver, By.XPATH, '//div[@class= "ng-star-inserted"]')
                 sleep(1)
 
-                contador = 1
+                count_detail = 1
                 contador_itens= 1
                 while True:
                     try:
                         #Fazendo um scroll até o botão, sem precisar de zoom ou um scroll fixo
-                        if contador_itens >= 500:
+                        if contador_itens <= 500:
+                            sleep(0.8)
                             btn_detail = driver.execute_script(f'''
                                 return document.evaluate(
-                                    '(//button[@class="br-button circle ng-star-inserted"])[{contador}]', 
+                                    '(//button[@class="br-button circle ng-star-inserted"])[{count_detail}]', 
                                     document, 
                                     null, 
                                     XPathResult.FIRST_ORDERED_NODE_TYPE, 
@@ -100,12 +101,12 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                     ).singleNodeValue;
                                 ''')
                             driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_detail)
-                            sleep(0.5)
+                            sleep(0.8)
                             btn_detail.click()
                             
                             #Para varrer
                             wait_for_element(driver, By.XPATH, '//div[@class= "br-modal modal-item-contrato"]')
-                            sleep(0.2)
+                            sleep(0.5)
                             #Varrendo os dados
                             response_webdriver = Selector(text= driver.page_source)
                             for element in response_webdriver.xpath('//div[@class= "br-modal-body"]'):
@@ -127,19 +128,29 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                 }
                                 
                             driver.find_element(By.XPATH, '//button[@class= "br-button primary small m-2"]').click()
-                            contador += 1
+                            count_detail += 1
                             contador_itens += 1
-                        else: 
+                        else:
                             break
                     except Exception as e:
                         print(e)
-                        contador = 1
-                        btn_next_page = wait_for_element(driver, By.XPATH, '//button[@id= "btn-next-page"]')
+                        count_detail = 1
+                        btn_next_page_scroll = driver.execute_script(f'''
+                                    return document.evaluate(
+                                        '//button[@id= "btn-next-page"]', 
+                                        document, 
+                                        null, 
+                                        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                                        null
+                                        ).singleNodeValue;
+                                    ''')
+                        driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_next_page_scroll)
+                        sleep(0.8)
+                        btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
                         is_disabled = btn_next_page.get_attribute('disabled') is not None
+                        btn_next_page.click()
                         
                         if is_disabled:
-                            break
-                        
-                        elif contador_itens < 500:
+                            break      
+                        else:
                             btn_next_page.click()
-                            sleep(1)
