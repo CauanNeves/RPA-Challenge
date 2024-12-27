@@ -51,6 +51,8 @@ class ConsultasPNCPsSpider(scrapy.Spider):
         keywords = ['Dipirona sódica', 'Atenolol', 'Clonazepam']
         
         for keyword in keywords:
+            sleep(5)
+            driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
             wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keywords[1]}')
             driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
             driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
@@ -60,8 +62,6 @@ class ConsultasPNCPsSpider(scrapy.Spider):
             n_edital = 0
             contador_itens = 1
             while True:
-                driver.back()
-                sleep(1)
                 if contador_itens >= 100:
                     n_edital = 0
                     contador_itens = 1
@@ -150,8 +150,12 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                 btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
                                 is_disabled = btn_next_page.get_attribute('disabled') is not None
                             except:
+                                driver.back()
+                                sleep(1)
                                 break
                             if is_disabled:
+                                driver.back()
+                                sleep(1)
                                 break      
                             else:
                                 btn_next_page.click()
