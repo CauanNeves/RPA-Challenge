@@ -51,13 +51,6 @@ class ConsultasPNCPsSpider(scrapy.Spider):
         keywords = ['Dipirona sódica', 'Atenolol', 'Clonazepam']
         
         for keyword in keywords:
-            sleep(5)
-            driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
-            wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'keyword')
-            driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
-            driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
-            sleep(2)
-
             #Abrindo Edital
             n_edital = 0
             contador_itens = 1
@@ -67,6 +60,11 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                     contador_itens = 1
                     break
                 else:
+                    driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
+                    wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keyword}')
+                    driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
+                    driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
+                    sleep(2)
                     n_edital += 1
                     btn_edital = driver.execute_script(f'''
                     return document.evaluate(
@@ -150,12 +148,13 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                 btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
                                 is_disabled = btn_next_page.get_attribute('disabled') is not None
                             except:
-                                driver.back()
-                                sleep(1)
+                                driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
+                                driver.find_element(By.XPATH, '//a[@title="Editais"]').click()
                                 break
                             if is_disabled:
-                                driver.back()
-                                sleep(1)
+                                driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
+                                driver.find_element(By.XPATH, '//a[@title="Editais"]').click()
                                 break      
                             else:
                                 btn_next_page.click()
+        driver.quit()

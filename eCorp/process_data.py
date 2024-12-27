@@ -5,7 +5,7 @@ import os
 df = pd.read_json('eCorp/dados_brutos.json')
 
 # Dividir os dados em grupos de 500 linhas
-chunk_size = 500
+chunk_size = 100
 sheets = ['Dipirona Sódica', 'Atenolol', 'Clonazepam']
 
 # Salvar em um único arquivo Excel com abas específicas
