@@ -53,7 +53,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
         for keyword in keywords:
             sleep(5)
             driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
-            wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keywords[1]}')
+            wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'keyword')
             driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
             driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
             sleep(2)
