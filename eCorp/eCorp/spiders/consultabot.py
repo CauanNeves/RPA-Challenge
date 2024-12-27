@@ -51,7 +51,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
         keywords = ['Dipirona sódica', 'Atenolol', 'Clonazepam']
         
         for keyword in keywords:
-            wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keyword}')
+            wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keywords[1]}')
             driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
             driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
             sleep(2)
@@ -60,17 +60,17 @@ class ConsultasPNCPsSpider(scrapy.Spider):
             n_edital = 0
             contador_itens = 1
             while True:
+                driver.back()
+                sleep(1)
                 if contador_itens >= 100:
-                    driver.execute_script("window.scrollTo(0, document.body.scrollTop)")
-                    sleep(0.8)
-                    driver.find_element(By.XPATH, '//a[@title= "Editais"]').click()
                     n_edital = 0
                     contador_itens = 1
                     break
                 else:
+                    n_edital += 1
                     btn_edital = driver.execute_script(f'''
                     return document.evaluate(
-                        '(//a[@title = "Acessar item."])[{n_edital + 1}]', 
+                        '(//a[@title = "Acessar item."])[{n_edital}]', 
                         document, 
                         null, 
                         XPathResult.FIRST_ORDERED_NODE_TYPE, 
@@ -134,21 +134,23 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                 break
                         except Exception as e:
                             print(e)
-                            count_detail = 1
-                            btn_next_page_scroll = driver.execute_script(f'''
-                                        return document.evaluate(
-                                            '//button[@id= "btn-next-page"]', 
-                                            document, 
-                                            null, 
-                                            XPathResult.FIRST_ORDERED_NODE_TYPE, 
-                                            null
-                                            ).singleNodeValue;
-                                        ''')
-                            driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth", block: "center"});', btn_next_page_scroll)
-                            sleep(0.8)
-                            btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
-                            is_disabled = btn_next_page.get_attribute('disabled') is not None
-                            
+                            try:
+                                count_detail = 1
+                                btn_next_page_scroll = driver.execute_script(f'''
+                                            return document.evaluate(
+                                                '//button[@id= "btn-next-page"]', 
+                                                document, 
+                                                null, 
+                                                XPathResult.FIRST_ORDERED_NODE_TYPE, 
+                                                null
+                                                ).singleNodeValue;
+                                            ''')
+                                driver.execute_script('arguments[0].scrollIntoView({behavior: "instant", block: "center"});', btn_next_page_scroll)
+                                sleep(0.8)
+                                btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
+                                is_disabled = btn_next_page.get_attribute('disabled') is not None
+                            except:
+                                break
                             if is_disabled:
                                 break      
                             else:
