@@ -56,11 +56,12 @@ class ConsultasPNCPsSpider(scrapy.Spider):
             contador_itens = 1
             while True:
                 if contador_itens >= 100:
-                    n_edital = 0
-                    contador_itens = 1
+                    driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
+                    driver.find_element(By.XPATH, '//a[@title="Editais"]').click()
                     break
                 else:
                     driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
+                    
                     wait_for_element(driver, By.XPATH, '//input[@id= "keyword"]').send_keys(f'{keyword}')
                     driver.find_element(By.CSS_SELECTOR, "label[for='status-todos']").click()
                     driver.find_element(By.XPATH, '//button[@aria-label = "Buscar"]').click()
@@ -83,7 +84,6 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                     wait_for_element(driver, By.XPATH, '//div[@class= "ng-star-inserted"]')
 
                     count_detail = 1
-                    contador_itens= 1
                     while True:
                         try:
                             #Fazendo um scroll até o botão, sem precisar de zoom ou um scroll fixo
@@ -99,7 +99,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                         ).singleNodeValue;
                                     ''')
                                 driver.execute_script('arguments[0].scrollIntoView({behavior: "instant", block: "center"});', btn_detail)
-                                sleep(0.2)
+                                sleep(0.5)
                                 btn_detail.click()
                                 
                                 #Para varrer
@@ -130,8 +130,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                 contador_itens += 1
                             else:
                                 break
-                        except Exception as e:
-                            print(e)
+                        except:
                             try:
                                 count_detail = 1
                                 btn_next_page_scroll = driver.execute_script(f'''
@@ -144,7 +143,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                                                 ).singleNodeValue;
                                             ''')
                                 driver.execute_script('arguments[0].scrollIntoView({behavior: "instant", block: "center"});', btn_next_page_scroll)
-                                sleep(0.8)
+                                sleep(0.2)
                                 btn_next_page = driver.find_element(By.XPATH, '//button[@id= "btn-next-page"]')
                                 is_disabled = btn_next_page.get_attribute('disabled') is not None
                             except:

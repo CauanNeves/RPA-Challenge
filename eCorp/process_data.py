@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # Caminho do arquivo JSON gerado pelo Scrapy
-df = pd.read_json('eCorp/dados_brutos.json')
+df = pd.read_json('dados_brutos.json')
 
 # Dividir os dados em grupos de 500 linhas
 chunk_size = 100
