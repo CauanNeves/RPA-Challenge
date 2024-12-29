@@ -55,7 +55,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
             n_edital = 0
             contador_itens = 1
             while True:
-                if contador_itens >= 100:
+                if contador_itens >= 500:
                     driver.execute_script('window.scrollTo({ top: 0, behavior: "instant" })')
                     driver.find_element(By.XPATH, '//a[@title="Editais"]').click()
                     break
@@ -87,7 +87,7 @@ class ConsultasPNCPsSpider(scrapy.Spider):
                     while True:
                         try:
                             #Fazendo um scroll até o botão, sem precisar de zoom ou um scroll fixo
-                            if contador_itens <= 100:
+                            if contador_itens <= 500:
                                 sleep(0.8)
                                 btn_detail = driver.execute_script(f'''
                                     return document.evaluate(

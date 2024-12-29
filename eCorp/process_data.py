@@ -2,14 +2,14 @@ import pandas as pd
 import os
 
 # Caminho do arquivo JSON gerado pelo Scrapy
-df = pd.read_json('dados_brutos.json')
+df = pd.read_json(os.getcwd() + '\\dados_brutos.json')
 
 # Dividir os dados em grupos de 500 linhas
-chunk_size = 100
+chunk_size = 500
 sheets = ['Dipirona Sódica', 'Atenolol', 'Clonazepam']
 
 # Salvar em um único arquivo Excel com abas específicas
-with pd.ExcelWriter('eCorp/dados.xlsx', engine='openpyxl') as writer:
+with pd.ExcelWriter(os.getcwd() + '\\dados.xls', engine='openpyxl') as writer:
     for i, sheet_name in enumerate(sheets):
         start_row = i * chunk_size
         end_row = start_row + chunk_size
